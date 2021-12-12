@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.*
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -99,20 +98,30 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
      */
     @SuppressLint("MissingPermission")
     private fun enableMyLocation() {
-        if (isPermissionGranted()) {
-            map.isMyLocationEnabled = true
-        } else {
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
-                    REQUEST_LOCATION_PERMISSION)
+        when {
+            ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // You can use the API that requires the permission.
+                map.isMyLocationEnabled = true
+            }
+
+            else -> {
+                // You can directly ask for the permission.
+                requestPermissions(
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        REQUEST_LOCATION_PERMISSION)
+            }
         }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         //("Not yet implemented")
         map = googleMap
-        enableMyLocation()
         map.moveCamera(CameraUpdateFactory.zoomIn())
         setPoiClick(map)
+        enableMyLocation()
     }
 
     private fun setPoiClick(map: GoogleMap) {
