@@ -5,6 +5,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.content.Intent
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.net.Uri
@@ -14,6 +15,10 @@ import android.util.Log
 import android.view.*
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -46,6 +51,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private val requestForegroundOnlyPermissionResultCode = 34
     private val locationPermissionIndex = 0
     private val backgroundLocationPermissionIndex = 1
+    private val requestTurnDeviceLocationOn = 29
+
     private val debugTag = "SelectLocationFragment"
 
     override fun onCreateView(
@@ -109,7 +116,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     }.show()
 
         } else {
-            enableMyLocation()
+            checkDeviceLocationSettings()
+
         }
     }
 
@@ -224,6 +232,51 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     true
                 }
         return foregroundLocationApproved && backgroundPermissionApproved
+    }
+
+    /*
+     *  Uses the Location Client to check the current state of location settings, and gives the user
+     *  the opportunity to turn on location services within our app.
+     */
+    private fun checkDeviceLocationSettings(resolve: Boolean = true) {
+
+        val locationRequest = LocationRequest.create().apply {
+            priority = LocationRequest.PRIORITY_LOW_POWER
+        }
+
+        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+        val settingsClient = LocationServices.getSettingsClient(requireContext())
+        val locationSettingsResponseTask = settingsClient.checkLocationSettings(builder.build())
+        locationSettingsResponseTask.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException && resolve) {
+                try {
+                    exception.startResolutionForResult(requireActivity(),
+                            requestTurnDeviceLocationOn)
+                } catch (sendEx: IntentSender.SendIntentException) {
+                    Log.d(debugTag, "Error getting location settings resolution: " + sendEx.message)
+                }
+            } else {
+                Snackbar.make(
+                        binding.rootMapLayout,
+                        R.string.location_required_error, Snackbar.LENGTH_INDEFINITE
+                ).setAction(android.R.string.ok) {
+                    checkDeviceLocationSettings()
+                }.show()
+            }
+        }
+
+        locationSettingsResponseTask.addOnCompleteListener {
+            if (it.isSuccessful) {
+                enableMyLocation()
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == requestTurnDeviceLocationOn) {
+            checkDeviceLocationSettings(false)
+        }
     }
 
 
