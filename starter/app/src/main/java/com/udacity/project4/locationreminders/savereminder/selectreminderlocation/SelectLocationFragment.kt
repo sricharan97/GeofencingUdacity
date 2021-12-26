@@ -3,7 +3,6 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.annotation.TargetApi
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
@@ -95,7 +94,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         map = googleMap
         setMapStyle(map)
         setPoiClick(map)
-        map.moveCamera(CameraUpdateFactory.zoomIn())
         enableMyLocation()
     }
 
@@ -164,14 +162,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             true -> {
                 // You can use the API that requires the permission.
                 checkDeviceLocationSettings()
-                map.isMyLocationEnabled = true
-                val zoomLevel = 15f
-                //Get the user's last known location and zoom the camera.
-                fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-                    location?.apply {
-                        map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(latitude, longitude), zoomLevel))
-                    }
-                }
+                locationEnabled()
             }
 
             else -> {
@@ -179,6 +170,19 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 requestPermissions(
                         arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                         requestForegroundOnlyPermissionResultCode)
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun locationEnabled() {
+
+        map.isMyLocationEnabled = true
+        val zoomLevel = 15f
+        //Get the user's last known location and zoom the camera.
+        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+            location?.apply {
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(latitude, longitude), zoomLevel))
             }
         }
     }
@@ -193,22 +197,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                 )
     }
 
-    /*
-     *  Determines whether the app has the appropriate permissions across Android 10+ and all other
-     *  Android versions.
-     */
-    @TargetApi(29)
-    private fun BackgroundLocationPermissionApproved(): Boolean {
 
-        return if (runningQorLater) {
-            PackageManager.PERMISSION_GRANTED ==
-                    ContextCompat.checkSelfPermission(
-                            requireContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                    )
-        } else {
-            true
-        }
-    }
 
 
     /**
@@ -250,7 +239,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun checkDeviceLocationSettings(resolve: Boolean = true) {
 
         val locationRequest = LocationRequest.create().apply {
-            priority = LocationRequest.PRIORITY_LOW_POWER
+            priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
         }
 
         val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
@@ -259,8 +248,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         locationSettingsResponseTask.addOnFailureListener { exception ->
             if (exception is ResolvableApiException && resolve) {
                 try {
-                    exception.startResolutionForResult(requireActivity(),
-                            requestTurnDeviceLocationOn)
+                    startIntentSenderForResult(exception.resolution.intentSender,
+                            requestTurnDeviceLocationOn, null, 0, 0, 0, null)
+                    //exception.startResolutionForResult(requireActivity(),
+                    //       requestTurnDeviceLocationOn)
                 } catch (sendEx: IntentSender.SendIntentException) {
                     Log.d(debugTag, "Error getting location settings resolution: " + sendEx.message)
                 }
@@ -276,16 +267,17 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         locationSettingsResponseTask.addOnCompleteListener {
             if (it.isSuccessful) {
-                enableMyLocation()
+                locationEnabled()
             }
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+        Log.d(debugTag, "Inside onActivityResult")
         if (requestCode == requestTurnDeviceLocationOn) {
             checkDeviceLocationSettings(false)
         }
+
     }
 
 

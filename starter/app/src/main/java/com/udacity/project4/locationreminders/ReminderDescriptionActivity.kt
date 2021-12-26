@@ -25,6 +25,7 @@ class ReminderDescriptionActivity : AppCompatActivity() {
         }
     }
 
+
     private lateinit var binding: ActivityReminderDescriptionBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,4 +35,6 @@ class ReminderDescriptionActivity : AppCompatActivity() {
         )
 //        TODO: Add the implementation of the reminder details
     }
+
+
 }
