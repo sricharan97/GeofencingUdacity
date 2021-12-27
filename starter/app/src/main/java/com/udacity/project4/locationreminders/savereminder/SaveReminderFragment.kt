@@ -92,12 +92,14 @@ class SaveReminderFragment : BaseFragment() {
 //            TODO: use the user entered reminder details to:
 //             1) add a geofencing request
 //             2) save the reminder to the local db
-            if (BackgroundLocationPermissionApproved()) {
+            if (backgroundLocationPermissionApproved()) {
                 startGeofence(reminderItem)
 
             } else {
-                requestPermissions(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-                        requestBackgroundPermissionResultCode)
+                requestPermissions(
+                    arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+                    requestBackgroundPermissionResultCode
+                )
             }
 
 
@@ -109,12 +111,12 @@ class SaveReminderFragment : BaseFragment() {
     *  Android versions.
     */
     @TargetApi(29)
-    private fun BackgroundLocationPermissionApproved(): Boolean {
+    private fun backgroundLocationPermissionApproved(): Boolean {
 
         return if (runningQorLater) {
             PackageManager.PERMISSION_GRANTED ==
                     ContextCompat.checkSelfPermission(
-                            requireContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                        requireContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION
                     )
         } else {
             true
@@ -202,9 +204,11 @@ class SaveReminderFragment : BaseFragment() {
 
     }
 
+
     override fun onDestroy() {
         super.onDestroy()
         //make sure to clear the view model after destroy, as it's a single view model.
         _viewModel.onClear()
+
     }
 }
