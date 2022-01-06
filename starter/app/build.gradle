@@ -35,8 +35,14 @@ android {
     //    enabled = true
     //    enabledForTests = true
     //}
+
     buildFeatures {
         dataBinding true
+    }
+
+    //allows you to access android resources in your unit tests, including your AndroidManifest file
+    testOptions.unitTests{
+        includeAndroidResources = true
     }
 }
 
