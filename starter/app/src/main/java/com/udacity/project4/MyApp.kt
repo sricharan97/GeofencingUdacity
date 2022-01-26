@@ -39,6 +39,9 @@ class MyApp : Application() {
             single { LocalDB.createRemindersDao(this@MyApp) }
         }
 
+
+
+
         startKoin {
             androidContext(this@MyApp)
             modules(listOf(myModule))

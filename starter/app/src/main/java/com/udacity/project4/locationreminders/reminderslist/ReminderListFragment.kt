@@ -1,12 +1,16 @@
 package com.udacity.project4.locationreminders.reminderslist
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import androidx.databinding.DataBindingUtil
+import com.firebase.ui.auth.AuthUI
 import com.udacity.project4.R
+import com.udacity.project4.authentication.AuthenticationActivity
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentRemindersBinding
+import com.udacity.project4.locationreminders.ReminderDescriptionActivity
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import com.udacity.project4.utils.setTitle
 import com.udacity.project4.utils.setup
@@ -18,14 +22,14 @@ class ReminderListFragment : BaseFragment() {
     override val _viewModel: RemindersListViewModel by viewModel()
     private lateinit var binding: FragmentRemindersBinding
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+            inflater: LayoutInflater, container: ViewGroup?,
+            savedInstanceState: Bundle?
+    ): View {
         binding =
-            DataBindingUtil.inflate(
-                inflater,
-                R.layout.fragment_reminders, container, false
-            )
+                DataBindingUtil.inflate(
+                        inflater,
+                        R.layout.fragment_reminders, container, false
+                )
         binding.viewModel = _viewModel
 
         setHasOptionsMenu(true)
@@ -62,7 +66,8 @@ class ReminderListFragment : BaseFragment() {
     }
 
     private fun setupRecyclerView() {
-        val adapter = RemindersListAdapter {
+        val adapter = RemindersListAdapter { reminder ->
+            startActivity(ReminderDescriptionActivity.newIntent(requireContext(), reminder))
         }
 
 //        setup the recycler view using the extension function
@@ -72,7 +77,10 @@ class ReminderListFragment : BaseFragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.logout -> {
-//                TODO: add the logout implementation
+//                Done: add the logout implementation
+                AuthUI.getInstance().signOut(requireContext())
+                startActivity(Intent(requireActivity(), AuthenticationActivity::class.java))
+                requireActivity().finish()
             }
         }
         return super.onOptionsItemSelected(item)

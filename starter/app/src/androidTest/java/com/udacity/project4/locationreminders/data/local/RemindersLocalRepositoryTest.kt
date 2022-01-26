@@ -8,9 +8,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
+import com.udacity.project4.locationreminders.utils.MainCoroutineRuleTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runBlockingTest
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
@@ -26,13 +27,17 @@ import java.io.IOException
 @MediumTest
 class RemindersLocalRepositoryTest {
 
-//    TODO: Add testing implementation to the RemindersLocalRepository.kt
+//    Done: Add testing implementation to the RemindersLocalRepository.kt
 
     //create inMemory database for testing Dao
     private lateinit var testDatabase: RemindersDatabase
 
     //subject under test
     private lateinit var remindersLocalRepository: RemindersLocalRepository
+
+    // Set the main coroutines dispatcher for testing.
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRuleTest()
 
     @get:Rule
     var instantTaskExecutorRule = InstantTaskExecutorRule()
@@ -53,7 +58,8 @@ class RemindersLocalRepositoryTest {
     }
 
     @Test
-    fun getReminders_savingTwoItems_returnsTwoItems() = runBlocking {
+    fun getReminders_savingTwoItems_returnsTwoItems() = mainCoroutineRule.runBlockingTest {
+
         //Given a list of two reminders
         val reminder1 = ReminderDTO("test1", "sampleReminder1", "testLocation1",
                 null, null)
@@ -84,14 +90,14 @@ class RemindersLocalRepositoryTest {
     }
 
     @Test
-    fun deleteAllReminders_savingTwoItems_returnsEmptyList() = runBlocking {
+    fun deleteAllReminders_savingTwoItems_returnsEmptyList() = mainCoroutineRule.runBlockingTest {
+
         //Given a list of two reminders
         val reminder1 = ReminderDTO("test1", "sampleReminder1", "testLocation1",
                 null, null)
-        val reminderId1 = reminder1.id
         val reminder2 = ReminderDTO("test2", "sampleReminder2", "testLocation2",
                 null, null)
-        val reminderId2 = reminder2.id
+
 
         //When saving the reminders through repository
         remindersLocalRepository.saveReminder(reminder1)

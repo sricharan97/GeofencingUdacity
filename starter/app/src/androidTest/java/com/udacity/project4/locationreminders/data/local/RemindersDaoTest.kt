@@ -24,7 +24,7 @@ import java.io.IOException
 @SmallTest
 class RemindersDaoTest {
 
-    //    TODO: Add testing implementation to the RemindersDao.kt
+    //    Done: Add testing implementation to the RemindersDao.kt
     //subject under test
     private lateinit var remindersDao: RemindersDao
 
@@ -49,6 +49,7 @@ class RemindersDaoTest {
 
     @Test
     fun getReminders_savingTwoItems_returnsTwoItems() = runBlockingTest {
+
         //Given a list of two reminders
         val reminder1 = ReminderDTO("test1", "sampleReminder1", "testLocation1",
                 null, null)
@@ -70,13 +71,12 @@ class RemindersDaoTest {
 
     @Test
     fun deleteAllReminders_savingTwoItems_returnsEmptyList() = runBlockingTest {
+
         //Given a list of two reminders
         val reminder1 = ReminderDTO("test1", "sampleReminder1", "testLocation1",
                 null, null)
-        val reminderId1 = reminder1.id
         val reminder2 = ReminderDTO("test2", "sampleReminder2", "testLocation2",
                 null, null)
-        val reminderId2 = reminder2.id
 
         //When saving the reminders through Dao
         remindersDao.saveReminder(reminder1)

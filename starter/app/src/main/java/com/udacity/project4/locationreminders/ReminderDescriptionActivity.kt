@@ -29,6 +29,7 @@ class ReminderDescriptionActivity : AppCompatActivity() {
     private lateinit var binding: ActivityReminderDescriptionBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding = DataBindingUtil.setContentView(
             this,
             R.layout.activity_reminder_description

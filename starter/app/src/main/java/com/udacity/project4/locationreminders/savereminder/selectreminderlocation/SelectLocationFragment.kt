@@ -24,10 +24,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.maps.model.PointOfInterest
+import com.google.android.gms.maps.model.*
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.BuildConfig
@@ -38,6 +35,7 @@ import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
+import java.util.*
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
@@ -48,10 +46,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var pointOfInterest: PointOfInterest
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
-    //private val REQUEST_LOCATION_PERMISSION = 1
-    private val runningQorLater = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
-
-    // private val requestForegroundAndBackgroundPermissionResultCode = 33
     private val requestForegroundOnlyPermissionResultCode = 34
     private val locationPermissionIndex = 0
 
@@ -62,7 +56,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binding =
                 DataBindingUtil.inflate(inflater, R.layout.fragment_select_location, container, false)
 
@@ -93,6 +87,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         //("Not yet implemented")
         map = googleMap
         setMapStyle(map)
+        setMapLongClick(map)
         setPoiClick(map)
         enableMyLocation()
     }
@@ -127,6 +122,38 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
     }
 
+    //setup Long click listener for testing support
+    private fun setMapLongClick(map: GoogleMap) {
+        map.setOnMapLongClickListener { latLng ->
+            val snippet = String.format(
+                    Locale.getDefault(),
+                    "Lat: %1$.5f, Long: %2$.5f",
+                    latLng.latitude,
+                    latLng.longitude
+            )
+            val longClickMarker = map.addMarker(MarkerOptions().position(latLng)
+                    .title(getString(R.string.dropped_pin))
+                    .snippet(snippet)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+            )
+            longClickMarker.showInfoWindow()
+            MaterialAlertDialogBuilder(requireContext()).setTitle("LocationSelectedForTesting")
+                    .setMessage(resources.getString(R.string.poi_selected))
+                    .setPositiveButton(resources.getString(R.string.Dialogue_positive)) { _, _ ->
+                        _viewModel.latitude.value = latLng.latitude
+                        _viewModel.longitude.value = latLng.longitude
+                        _viewModel.reminderSelectedLocationStr.value = "testLocation"
+                        _viewModel.navigationCommand.value = NavigationCommand.Back
+                    }
+                    .setNegativeButton(resources.getString(R.string.Dialogue_negative)) { dialogInterface, _ ->
+                        dialogInterface.cancel()
+                    }.show()
+
+        }
+
+
+    }
+
     /**
      * Pass in the selectedPOI attributes to the viewModel based on
      * response from the user off the presented Dialogue
@@ -137,13 +164,13 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         //         and navigate back to the previous fragment to save the reminder and add the geofence
         MaterialAlertDialogBuilder(requireContext()).setTitle(pointOfInterest.name)
                 .setMessage(resources.getString(R.string.poi_selected))
-                .setPositiveButton(resources.getString(R.string.Dialogue_positive)) { dialogInterface, i ->
+                .setPositiveButton(resources.getString(R.string.Dialogue_positive)) { _, _ ->
                     _viewModel.latitude.value = pointOfInterest.latLng.latitude
                     _viewModel.longitude.value = pointOfInterest.latLng.longitude
                     _viewModel.reminderSelectedLocationStr.value = pointOfInterest.name
                     _viewModel.navigationCommand.value = NavigationCommand.Back
                 }
-                .setNegativeButton(resources.getString(R.string.Dialogue_negative)) { dialogInterface, i ->
+                .setNegativeButton(resources.getString(R.string.Dialogue_negative)) { dialogInterface, _ ->
                     dialogInterface.cancel()
                 }.show()
 

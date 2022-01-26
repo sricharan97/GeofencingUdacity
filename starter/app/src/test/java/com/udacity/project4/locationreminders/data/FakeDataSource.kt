@@ -7,10 +7,19 @@ import com.udacity.project4.locationreminders.data.dto.Result
 
 class FakeDataSource(var reminders: MutableList<ReminderDTO>? = mutableListOf()) : ReminderDataSource {
 
-//    TODO: Create a fake data source to act as a double to the real data source
+//    Done: Create a fake data source to act as a double to the real data source
+
+    private var shouldReturnError = false
+
+    fun setReturnError(value: Boolean) {
+        shouldReturnError = value
+    }
 
     override suspend fun getReminders(): Result<List<ReminderDTO>> {
         //Done("Return the reminders")
+        if (shouldReturnError) {
+            return Result.Error("Intentional error for testing")
+        }
         reminders?.let { return Result.Success(ArrayList(it)) }
         return Result.Error("reminders not found")
     }

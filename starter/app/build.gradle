@@ -43,6 +43,7 @@ android {
     //allows you to access android resources in your unit tests, including your AndroidManifest file
     testOptions.unitTests{
         includeAndroidResources = true
+        returnDefaultValues = true
     }
 }
 
@@ -122,6 +123,9 @@ dependencies {
     androidTestImplementation "org.mockito:mockito-core:$mockitoVersion"
     androidTestImplementation "com.linkedin.dexmaker:dexmaker-mockito:$dexMakerVersion"
     androidTestImplementation('org.koin:koin-test:2.0.1') { exclude group: 'org.mockito' }
+    androidTestImplementation "org.koin:koin-androidx-viewmodel:$koinVersion"
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:$uiAutomatorVersion")
+
 
 
 
