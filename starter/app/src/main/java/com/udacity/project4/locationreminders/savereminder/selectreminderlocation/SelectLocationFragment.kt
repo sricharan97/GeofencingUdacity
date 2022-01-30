@@ -188,8 +188,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
             true -> {
                 // You can use the API that requires the permission.
+                map.isMyLocationEnabled = true
                 checkDeviceLocationSettings()
-                locationEnabled()
             }
 
             else -> {
@@ -204,7 +204,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     @SuppressLint("MissingPermission")
     private fun locationEnabled() {
 
-        map.isMyLocationEnabled = true
+        // map.isMyLocationEnabled = true
         val zoomLevel = 15f
         //Get the user's last known location and zoom the camera.
         fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
@@ -231,6 +231,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
      * Based on the outcome from
      * requesting permissions
      */
+    @SuppressLint("MissingPermission")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
 
         if (requestCode == requestForegroundOnlyPermissionResultCode) {
@@ -252,6 +253,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                         }.show()
 
             } else {
+                map.isMyLocationEnabled = true
                 checkDeviceLocationSettings()
 
             }
