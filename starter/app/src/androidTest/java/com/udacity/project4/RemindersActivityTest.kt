@@ -1,5 +1,7 @@
 package com.udacity.project4
 
+import android.annotation.TargetApi
+import android.app.Activity
 import android.app.Application
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
@@ -7,6 +9,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers.withDecorView
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
@@ -27,6 +30,8 @@ import com.udacity.project4.util.DataBindingIdlingResource
 import com.udacity.project4.util.monitorActivity
 import com.udacity.project4.utils.EspressoIdlingResource
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.CoreMatchers.`is`
+import org.hamcrest.CoreMatchers.not
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -45,6 +50,7 @@ private const val LAUNCH_TIMEOUT = 3000L
 @RunWith(AndroidJUnit4::class)
 @SdkSuppress(minSdkVersion = 18)
 @LargeTest
+@TargetApi(29)
 //END TO END test to black box test the app
 class RemindersActivityTest :
         AutoCloseKoinTest() {// Extended Koin Test - embed autoclose @after method to close Koin after every test
@@ -57,6 +63,7 @@ class RemindersActivityTest :
 
     //UIdevice instance for UI automator testing
     private lateinit var device: UiDevice
+
 
     /**
      * As we use Koin as a Service Locator Library to develop our code, we'll also use Koin to test our code.
@@ -127,6 +134,15 @@ class RemindersActivityTest :
         IdlingRegistry.getInstance().unregister(dataBindingIdlingResource)
     }
 
+    // get activity context
+    private fun getActivity(activityScenario: ActivityScenario<RemindersActivity>): Activity? {
+        var activity: Activity? = null
+        activityScenario.onActivity {
+            activity = it
+        }
+        return activity
+    }
+
 
 //    Done: add End to End testing to the app
 
@@ -168,7 +184,16 @@ class RemindersActivityTest :
         //once returned to saveReminderFragment click the save button
         onView(withId(R.id.saveReminder)).perform(click())
 
-        //check if the title and description are vissible
+        //Check whether the reminderSaved toast message is shown
+        onView(withText(R.string.reminder_saved)).inRoot(withDecorView(not(`is`(getActivity(activityScenario)?.window?.decorView))))
+                .check(
+                        matches(
+                                isDisplayed()
+                        )
+                )
+
+
+        //check if the title and description are visible
         onView(withText(title)).check(matches(isDisplayed()))
         onView(withText(description)).check(matches(isDisplayed()))
 
@@ -203,5 +228,79 @@ class RemindersActivityTest :
 
         activityScenario.close()
     }
+
+
+    @Test
+    fun saveReminder_withoutTitle_showsSnackbar() = runBlocking {
+
+        //Given remindersActivity is started with no reminders
+        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
+        dataBindingIdlingResource.monitorActivity(activityScenario)
+
+        //when the add reminder fab is clicked to enter reminder details in next screens
+        onView(withId(R.id.addReminderFAB)).perform(click())
+
+        //select the location by clicking o location text
+        onView(withId(R.id.selectLocation)).perform(click())
+
+
+        //wait until select location fragment appears
+        device.wait(Until.hasObject(By.pkg(SELECT_LOCATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT)
+
+        onView(withContentDescription("Google Map")).perform(longClick())
+
+
+        //Click yes button on dialog once poi is selected
+        val yesButton = device.findObject(UiSelector().text("YES").className("android.widget.Button"))
+        // Simulate a user-click on the OK button, if found.
+        if (yesButton.exists() && yesButton.isEnabled) {
+            yesButton.click()
+        }
+
+        //reminder details to be entered
+        val description = "Test description"
+
+        onView(withId(R.id.reminderDescription)).perform(typeText(description), closeSoftKeyboard())
+
+        //once returned to saveReminderFragment click the save button without adding the title
+        onView(withId(R.id.saveReminder)).perform(click())
+
+        //Then a snackbar shows up asking to enter the title
+        onView(withId(com.google.android.material.R.id.snackbar_text)).check(matches(withText(getActivity(activityScenario)?.getString(R.string.err_enter_title))))
+
+        activityScenario.close()
+
+    }
+
+
+    @Test
+    fun saveReminder_withoutLocation_showsSnackbar() = runBlocking {
+
+        //Given remindersActivity is started with no reminders
+        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
+        dataBindingIdlingResource.monitorActivity(activityScenario)
+
+        //when the add reminder fab is clicked to enter reminder details in next screens
+        onView(withId(R.id.addReminderFAB)).perform(click())
+
+
+        //reminder details to be entered
+        val description = "Test description"
+        val title = "Test Title"
+
+        onView(withId(R.id.reminderDescription)).perform(typeText(description), closeSoftKeyboard())
+        onView(withId(R.id.reminderTitle)).perform(typeText(title), closeSoftKeyboard())
+
+
+        // click the save button without selecting the location
+        onView(withId(R.id.saveReminder)).perform(click())
+
+        //Then a snackbar shows up asking to select the location
+        onView(withId(com.google.android.material.R.id.snackbar_text)).check(matches(withText(getActivity(activityScenario)?.getString(R.string.err_select_location))))
+
+        activityScenario.close()
+
+    }
+
 
 }
