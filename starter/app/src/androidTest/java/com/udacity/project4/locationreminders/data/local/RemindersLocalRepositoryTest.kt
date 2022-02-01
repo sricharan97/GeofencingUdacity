@@ -63,17 +63,15 @@ class RemindersLocalRepositoryTest {
         //Given a list of two reminders
         val reminder1 = ReminderDTO("test1", "sampleReminder1", "testLocation1",
                 null, null)
-        val reminderId1 = reminder1.id
         val reminder2 = ReminderDTO("test2", "sampleReminder2", "testLocation2",
                 null, null)
-        val reminderId2 = reminder2.id
 
         //When saving the reminders through repository
         remindersLocalRepository.saveReminder(reminder1)
         remindersLocalRepository.saveReminder(reminder2)
 
-        val result1 = remindersLocalRepository.getReminder(reminderId1)
-        val result2 = remindersLocalRepository.getReminder(reminderId2)
+        val result1 = remindersLocalRepository.getReminder(reminder1.id)
+        val result2 = remindersLocalRepository.getReminder(reminder2.id)
         val results = remindersLocalRepository.getReminders()
 
         //Then getReminders from repository retrieves correct reminders and the operation is success
@@ -115,6 +113,31 @@ class RemindersLocalRepositoryTest {
 
         //Then  empty list is returned
         assertThat(deleteResult.data.size, `is`(0))
+
+    }
+
+    @Test
+    fun getReminder_withIdNotAvailable_returnsError() = mainCoroutineRule.runBlockingTest {
+
+        //Given a list of two reminders
+        val reminder1 = ReminderDTO("test1", "sampleReminder1", "testLocation1",
+                null, null)
+        val reminder2 = ReminderDTO("test2", "sampleReminder2", "testLocation2",
+                null, null)
+
+
+        //Save only first reminder through the repository
+        remindersLocalRepository.saveReminder(reminder1)
+
+        //When attempted to get the reminder2 from repository
+        val result = remindersLocalRepository.getReminder(reminder2.id)
+
+        //Then repository returns error
+        assertThat(result is Result.Error, `is`(true))
+
+        result as Result.Error
+
+        assertThat(result.message, `is`("Reminder not found!"))
 
     }
 
