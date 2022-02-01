@@ -30,6 +30,10 @@ class FakeDataSource(var reminders: MutableList<ReminderDTO>? = mutableListOf())
     }
 
     override suspend fun getReminder(id: String): Result<ReminderDTO> {
+
+        if (shouldReturnError) {
+            return Result.Error("Intentional error for testing")
+        }
         //Done("return the reminder with the id")
         reminders?.let {
             val reminderItem = it.find { item -> item.id == id }
